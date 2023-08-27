@@ -1,20 +1,20 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file    stm32g0xx_it.c
-  * @brief   Interrupt Service Routines.
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2023 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    stm32g0xx_it.c
+ * @brief   Interrupt Service Routines.
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2023 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
@@ -22,6 +22,8 @@
 #include "stm32g0xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "cmsis_os.h"
+#include "key.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,6 +57,7 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
+extern TIM_HandleTypeDef htim6;
 extern DMA_HandleTypeDef hdma_usart1_rx;
 extern DMA_HandleTypeDef hdma_usart1_tx;
 extern UART_HandleTypeDef huart1;
@@ -115,7 +118,20 @@ void EXTI2_3_IRQHandler(void)
   HAL_GPIO_EXTI_IRQHandler(DW_IRQn_Pin);
   HAL_GPIO_EXTI_IRQHandler(KEY_Plus_Pin);
   /* USER CODE BEGIN EXTI2_3_IRQn 1 */
-
+  uint32_t save = taskENTER_CRITICAL_FROM_ISR();
+  if ((GPIOB->IDR & KEY_Plus_Pin) == 0)
+  {
+    key[0].flag.key_state = KEY_STATE_PRESS; // 按下
+    key[0].flag.check = 1;
+    key[0].time_continus = 0; // 按键持续时间置零，准备开始计时
+  }
+  else if ((GPIOB->IDR & KEY_Plus_Pin) != 0 && key[0].flag.key_state == KEY_STATE_PRESS)
+  {
+    key[0].flag.key_state = KEY_STATE_RELEASE; // 松开
+    key[0].flag.check = 1;
+    key[0].time_idle = 0; // 按键空闲时间置零，准备开始计时
+  }
+  taskEXIT_CRITICAL_FROM_ISR(save);
   /* USER CODE END EXTI2_3_IRQn 1 */
 }
 
@@ -129,7 +145,20 @@ void EXTI4_15_IRQHandler(void)
   /* USER CODE END EXTI4_15_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(KEY_Minus_Pin);
   /* USER CODE BEGIN EXTI4_15_IRQn 1 */
-
+  uint32_t save = taskENTER_CRITICAL_FROM_ISR();
+  if ((GPIOB->IDR & KEY_Minus_PIN) == 0)
+  {
+    key[1].flag.key_state = KEY_STATE_PRESS; // 按下
+    key[1].flag.check = 1;
+    key[1].time_continus = 0; // 按键持续时间置零，准备开始计时
+  }
+  else if ((GPIOB->IDR & KEY_Minus_PIN) != 0 && key[1].flag.key_state == KEY_STATE_PRESS)
+  {
+    key[1].flag.key_state = KEY_STATE_RELEASE; // 松开
+    key[1].flag.check = 1;
+    key[1].time_idle = 0; // 按键空闲时间置零，准备开始计时
+  }
+  taskEXIT_CRITICAL_FROM_ISR(save);
   /* USER CODE END EXTI4_15_IRQn 1 */
 }
 
@@ -146,6 +175,20 @@ void DMA1_Ch4_7_DMAMUX1_OVR_IRQHandler(void)
   /* USER CODE BEGIN DMA1_Ch4_7_DMAMUX1_OVR_IRQn 1 */
 
   /* USER CODE END DMA1_Ch4_7_DMAMUX1_OVR_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM6, DAC1 and LPTIM1 interrupts (LPTIM1 interrupt through EXTI line 29).
+  */
+void TIM6_DAC_LPTIM1_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM6_DAC_LPTIM1_IRQn 0 */
+
+  /* USER CODE END TIM6_DAC_LPTIM1_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim6);
+  /* USER CODE BEGIN TIM6_DAC_LPTIM1_IRQn 1 */
+
+  /* USER CODE END TIM6_DAC_LPTIM1_IRQn 1 */
 }
 
 /**

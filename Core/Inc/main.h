@@ -23,30 +23,51 @@
 #define __MAIN_H
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32g0xx_hal.h"
 
-  /* Private includes ----------------------------------------------------------*/
-  /* USER CODE BEGIN Includes */
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+#include "cmsis_os.h"
+#include "semphr.h"
+#include "queue.h"
+#include "event_groups.h"
+/* USER CODE END Includes */
 
-  /* USER CODE END Includes */
+/* Exported types ------------------------------------------------------------*/
+/* USER CODE BEGIN ET */
 
-  /* Exported types ------------------------------------------------------------*/
-  /* USER CODE BEGIN ET */
+/* USER CODE END ET */
 
-  /* USER CODE END ET */
+/* Exported constants --------------------------------------------------------*/
+/* USER CODE BEGIN EC */
+#define EVENTBIT_KEY_PLUS_LONGPRESS (1 << 0)
+#define EVENTBIT_MASK_KEY_PLUS_LONGPRESS (0x01)
+#define EVENTBIT_KEY_MINUS_LONGPRESS (1 << 1)
+#define EVENTBIT_MASK_KEY_MINUS_LONGPRESS (0x02)
 
-  /* Exported constants --------------------------------------------------------*/
-  /* USER CODE BEGIN EC */
+#define EVENTBIT_KEY_PLUS_CLICK (1 << 2)
+#define EVENTBIT_MASK_KEY_PLUS_CLICK (0x04)
+#define EVENTBIT_KEY_MINUS_CLICK (1 << 3)
+#define EVENTBIT_MASK_KEY_MINUS_CLICK (0x08)
 
-  /* USER CODE END EC */
+#define EVENTBIT_KEY_PLUS_DCLICK (1 << 4)
+#define EVENTBIT_MASK_KEY_PLUS_DCLICK (0x10)
+#define EVENTBIT_KEY_MINUS_DCLICK (1 << 5)
+#define EVENTBIT_MASK_KEY_MINUS_DCLICK (0x20)
 
-  /* Exported macro ------------------------------------------------------------*/
-  /* USER CODE BEGIN EM */
+#define EVENTBIT_KEY_PLUS_MCLICK (1 << 6)
+#define EVENTBIT_MASK_KEY_PLUS_MCLICK (0x40)
+#define EVENTBIT_KEY_MINUS_MCLICK (1 << 7)
+#define EVENTBIT_MASK_KEY_MINUS_MCLICK (0x80)
+
+/* USER CODE END EC */
+
+/* Exported macro ------------------------------------------------------------*/
+/* USER CODE BEGIN EM */
   typedef const int32_t sc32;
   typedef const int16_t sc16;
   typedef const int8_t sc8;
@@ -74,10 +95,11 @@ extern "C"
   typedef __I uint32_t vuc32;
   typedef __I uint16_t vuc16;
   typedef __I uint8_t vuc8;
-  /* USER CODE END EM */
 
-  /* Exported functions prototypes ---------------------------------------------*/
-  void Error_Handler(void);
+/* USER CODE END EM */
+
+/* Exported functions prototypes ---------------------------------------------*/
+void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 
@@ -116,9 +138,9 @@ extern "C"
 #define KEY_Minus_GPIO_Port GPIOB
 #define KEY_Minus_EXTI_IRQn EXTI4_15_IRQn
 
-  /* USER CODE BEGIN Private defines */
+/* USER CODE BEGIN Private defines */
 
-  /* USER CODE END Private defines */
+/* USER CODE END Private defines */
 
 #ifdef __cplusplus
 }
