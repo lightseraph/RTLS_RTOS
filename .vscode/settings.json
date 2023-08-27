@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.ino": "cpp",
+        "stm32g0xx.h": "c"
+    }
+}
