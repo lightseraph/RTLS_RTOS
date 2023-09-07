@@ -107,6 +107,12 @@ const osThreadAttr_t DW_Init_attributes = {
     .name = "DW_Init",
     .priority = (osPriority_t)osPriorityNormal,
     .stack_size = 128 * 4};
+/* Definitions for DW_Main */
+osThreadId_t DW_MainHandle;
+const osThreadAttr_t DW_Main_attributes = {
+    .name = "DW_Main",
+    .priority = (osPriority_t)osPriorityNormal,
+    .stack_size = 512 * 4};
 /* Definitions for FLASH_LED_Q */
 osMessageQueueId_t FLASH_LED_QHandle;
 const osMessageQueueAttr_t FLASH_LED_Q_attributes = {
@@ -137,6 +143,7 @@ void Task_Status_Task(void *argument);
 void Parse_RX_Task(void *argument);
 void OLED_Display_Task(void *argument);
 extern void DW_Init_Task(void *argument);
+extern void DW_Main_Task(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -232,6 +239,9 @@ void MX_FREERTOS_Init(void)
   /* creation of DW_Init */
   DW_InitHandle = osThreadNew(DW_Init_Task, NULL, &DW_Init_attributes);
 
+  /* creation of DW_Main */
+  DW_MainHandle = osThreadNew(DW_Main_Task, NULL, &DW_Main_attributes);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -255,6 +265,7 @@ void MX_FREERTOS_Init(void)
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
+  ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
   /* Infinite loop */
   for (;;)
   {

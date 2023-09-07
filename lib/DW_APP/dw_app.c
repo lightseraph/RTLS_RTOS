@@ -3,11 +3,15 @@
 #include "deca_regs.h"
 #include "ssd1306.h"
 #include "cmsis_os.h"
+#include "instance.h"
+#include "kalman.h"
 
 #define TX_ANT_DLY 16385
 #define RX_ANT_DLY 16385
 
 extern dwt_txconfig_t txconfig_options;
+extern osThreadId_t defaultTaskHandle;
+extern osThreadId_t DW_MainHandle;
 
 static dwt_config_t config = {
     5,                /* 信道号. Channel number. */
@@ -41,25 +45,34 @@ void DW_Init_Task(void *argument)
         LCD_DISPLAY(0, 32, "DW INIT Error!");
     }
     else
+    {
         LCD_DISPLAY(0, 32, "DW INIT Success!");
-    osDelay(1000);
-    if (!dwt_configure(&config))
-        LCD_DISPLAY(0, 32, "DW Config Success!");
+        osDelay(1000);
+        if (!dwt_configure(&config))
+            LCD_DISPLAY(0, 32, "DW Config Success!");
 
-    dwt_setrxantennadelay(RX_ANT_DLY);
-    dwt_settxantennadelay(TX_ANT_DLY);
+        dwt_setrxantennadelay(RX_ANT_DLY);
+        dwt_settxantennadelay(TX_ANT_DLY);
 
-    dwt_setleds(DWT_LEDS_ENABLE | DWT_LEDS_INIT_BLINK);
-    dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
-    osDelay(2000);
-    LCD_DISPLAY(0, 32, "                  ");
-    vTaskDelete(NULL);
+        kalman_filter_Init();
+
+        dwt_setleds(DWT_LEDS_ENABLE | DWT_LEDS_INIT_BLINK);
+        dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
+
+        xTaskNotifyGive(defaultTaskHandle);
+        xTaskNotifyGive(DW_MainHandle);
+        osDelay(2000);
+
+        LCD_DISPLAY(0, 32, "                  ");
+        vTaskDelete(NULL);
+    }
 }
 
-void dw_tag_init(void)
+void DW_Main_Task(void *argument)
 {
-}
-
-void dw_anchor_init(void)
-{
+    ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+    for (;;)
+    {
+        osDelay(10);
+    }
 }
