@@ -419,6 +419,7 @@ extern "C"
         uint8_t stsMode;             //!< STS mode (no STS, STS before PHR or STS after data)
         dwt_sts_lengths_e stsLength; //!< STS length (the allowed values are listed in dwt_sts_lengths_e
         uint8_t pdoaMode;            //!< PDOA mode
+        uint8_t prf;
     } dwt_config_t;
 
     typedef struct

@@ -78,7 +78,7 @@ int instance_calculate_rangefromTOF(int idx, uint32_t tofx)
 		distance_to_correct = distance;
 	}
 
-	// distance = distance - dwt_getrangebias(inst->configData.chan, (float)distance_to_correct, inst->configData.prf);
+	distance = distance - dwt_getrangebias(inst->configData.chan, (float)distance_to_correct, inst->configData.prf);
 
 	if ((distance < 0) || (distance > 20000.000)) // discard any results less than <0 cm or >20 km
 		return 0;
@@ -201,7 +201,7 @@ int instance_init(int inst_mode)
 	inst->twrMode = LISTENER;
 	inst->AppState = TA_INIT;
 	inst->instToSleep = FALSE;
-	inst->is_Kalman = rom_KalFilter();
+	inst->is_Kalman = rom_getKalFilter();
 
 	// Reset the IC (might be needed if not getting here from POWER ON)
 	// ARM code: Remove soft reset here as using hard reset in the inittestapplication() in the main.c file
@@ -211,7 +211,7 @@ int instance_init(int inst_mode)
 	result = dwt_initialise(DWT_DW_INIT);
 
 	// this is platform dependent - only program if DW EVK/EVB
-	dwt_setleds(3); // configure the GPIOs which control the leds on EVBs
+	dwt_setleds(DWT_LEDS_ENABLE | DWT_LEDS_INIT_BLINK); // configure the GPIOs which control the leds on EVBs
 
 	if (DWT_SUCCESS != result)
 	{
@@ -259,7 +259,7 @@ int instance_init(int inst_mode)
 
 	inst->rxResps = 0;
 
-	dwt_setlnapamode(3); // enable TX, RX state on GPIOs 6 and 5
+	dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE); // enable TX, RX state on GPIOs 6 and 5
 
 	inst->delayedTRXTime32h = 0;
 
@@ -282,13 +282,16 @@ void instance_config(instanceConfig_t *config, sfConfig_t *sfConfig)
 	inst->configData.chan = config->channelNumber;
 	inst->configData.rxCode = config->preambleCode;
 	inst->configData.txCode = config->preambleCode;
-	// inst->configData.prf = config->pulseRepFreq;
+	inst->configData.prf = config->pulseRepFreq;
 	inst->configData.dataRate = config->dataRate;
 	inst->configData.txPreambLength = config->preambleLen;
 	inst->configData.rxPAC = config->pacSize;
-	// inst->configData.nsSFD = config->nsSFD;
+	inst->configData.sfdType = config->nsSFD;
 	inst->configData.phrMode = DWT_PHRMODE_STD;
 	inst->configData.sfdTO = config->sfdTO;
+	inst->configData.stsMode = DWT_STS_MODE_OFF;
+	inst->configData.stsLength = DWT_STS_LEN_64;
+	inst->configData.pdoaMode = DWT_PDOA_M0;
 
 	dwt_configure(&inst->configData);
 
@@ -656,10 +659,10 @@ uint8_t instance_validranges(void)
 
 float instance_getReceivePower(void)
 {
-	uint16_t C, N;
+	uint16_t C = 0, N = 0;
 	uint32_t twoPower17 = 131072;
 	float A, corrFac;
-	readReceivePower(&C, &N);
+	// readReceivePower(&C, &N);
 	instance_data_t *inst = instance_get_local_structure_ptr();
 	if (inst->configData.prf == DWT_PRF_16M)
 	{
@@ -747,7 +750,7 @@ void instance_set_replydelay(int delayus) // delay in us
 
 	// SFD length is 64 for 110k (always)
 	// SFD length is 8 for 6.81M, and 16 for 850k, but can vary between 8 and 16 bytes
-	sfdlen = dwnsSFDlen[inst->configData.dataRate];
+	sfdlen = 8;
 
 	switch (inst->configData.txPreambLength)
 	{

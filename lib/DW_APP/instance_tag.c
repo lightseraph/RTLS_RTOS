@@ -24,11 +24,11 @@ void tag_enable_rx(uint32_t dlyTime)
 	if (dwt_rxenable(DWT_START_RX_DELAYED | DWT_IDLE_ON_DLY_ERR) == DWT_ERROR) // 延时打开接收机
 	{
 		// 设置延时开启接收机失败，立即开启接收
-		dwt_setpreambledetecttimeout(0);					   // 清除前导码超时
+		dwt_setpreambledetecttimeout(0);						 // 清除前导码超时
 		dwt_setrxtimeout((uint16_t)inst->fwto4RespFrame_sy * 2); // 设置延时RX时间，加长超时时间以便多接收一会
-		dwt_rxenable(DWT_START_RX_IMMEDIATE);				   // 开启接收，立即开启
+		dwt_rxenable(DWT_START_RX_IMMEDIATE);					 // 开启接收，立即开启
 		// 恢复设置前的参数
-		dwt_setpreambledetecttimeout(PTO_PACS);			   // 设置前导码超时时间
+		dwt_setpreambledetecttimeout(PTO_PACS);				 // 设置前导码超时时间
 		dwt_setrxtimeout((uint16_t)inst->fwto4RespFrame_sy); // 恢复设置接收超时时间为resp消息时长
 	}
 }
@@ -193,9 +193,9 @@ void rx_ok_cb_tag(const dwt_cb_data_t *rxd)
 	dw_event.rxLength = rxd->datalength;
 
 	// 校验frame control为0X41 0X88，标准数据帧头格式，短地址模式
-	if (rxd->fctrl[0] == 0x41)
+	if (true)
 	{
-		if ((rxd->fctrl[1] & 0xCC) == 0x88)
+		if (true)
 		{
 			fcode_index = FRAME_CRTL_AND_ADDRESS_S;
 			srcAddr_index = FRAME_CTRLP + ADDR_BYTE_SIZE_S;
@@ -219,9 +219,9 @@ void rx_ok_cb_tag(const dwt_cb_data_t *rxd)
 		rxd_event = SIG_RX_UNKNOWN; // 错误消息头
 	}
 
-	dwt_readrxtimestamp(rxTimeStamp);									  // 读取接收时间戳
+	dwt_readrxtimestamp(rxTimeStamp);										// 读取接收时间戳
 	dwt_readrxdata((uint8_t *)&dw_event.msgu.frame[0], rxd->datalength, 0); // 读取接收数据
-	instance_seteventtime(&dw_event, rxTimeStamp);						  // 接收时间接入事件消息
+	instance_seteventtime(&dw_event, rxTimeStamp);							// 接收时间接入事件消息
 
 	dw_event.type = 0;
 	dw_event.typePend = DWT_SIG_DW_IDLE;
@@ -229,7 +229,7 @@ void rx_ok_cb_tag(const dwt_cb_data_t *rxd)
 	if (rxd_event == DWT_SIG_RX_OKAY) // 正确接收消息
 	{
 		uint16_t sourceAddress = (((uint16_t)dw_event.msgu.frame[srcAddr_index + 1]) << 8) + dw_event.msgu.frame[srcAddr_index]; // 获取源地址
-		switch (dw_event.msgu.frame[fcode_index])																			 // 识别功能码
+		switch (dw_event.msgu.frame[fcode_index])																				 // 识别功能码
 		{
 		case RTLS_DEMO_MSG_ANCH_RESP: // 当前消息是基站的resp消息
 		{
@@ -285,9 +285,9 @@ int tag_app_run(instance_data_t *inst)
 	{
 	case TA_INIT: // 标签初始化状态，设置初始化参数
 	{
-		uint16_t sleep_mode = 0;											 // 初始化sleep_mode=0
-		dwt_enableframefilter(DWT_FF_DATA_EN | DWT_FF_ACK_EN);			 // 设置帧过滤模式，允许接收帧数据和ACK数据
-		memcpy(inst->eui64, &inst->instanceAddress16, ADDR_BYTE_SIZE_S); // 将标签EUI的最后2个字节设置为标签短地址，如T1标签的EUI=[FF FF FF FF 00 00 00 01]
+		// uint16_t sleep_mode = 0;														  // 初始化sleep_mode=0
+		dwt_configureframefilter(DWT_FF_ENABLE_802_15_4, DWT_FF_DATA_EN | DWT_FF_ACK_EN); // 设置帧过滤模式，允许接收帧数据和ACK数据
+		memcpy(inst->eui64, &inst->instanceAddress16, ADDR_BYTE_SIZE_S);				  // 将标签EUI的最后2个字节设置为标签短地址，如T1标签的EUI=[FF FF FF FF 00 00 00 01]
 
 		dwt_seteui(inst->eui64);   // 写入寄存器，设置标签EUI
 		dwt_setpanid(inst->panID); // 写入寄存器，设置标签PANID
@@ -308,12 +308,12 @@ int tag_app_run(instance_data_t *inst)
 #endif
 		inst->rangeNum = 0;				 // 初始化rangeNum=0
 		inst->tagSleepCorrection_ms = 0; // 初始化tagSleepCorrection_ms=0，标签休眠进入对应的SLOT校准值
-		// 以下设置默认休眠模式
-		sleep_mode = (DWT_PRESRV_SLEEP | DWT_CONFIG | DWT_TANDV);
-		if (inst->configData.txPreambLength == DWT_PLEN_64)
-		{
-			sleep_mode |= DWT_LOADOPSET;
-		}
+										 // 以下设置默认休眠模式
+										 /* sleep_mode = (DWT_PRES_SLEEP | DWT_CONFIG | DWT_TANDV);
+										 if (inst->configData.txPreambLength == DWT_PLEN_64)
+										 {
+											 sleep_mode |= DWT_LOADOPSET;
+										 } */
 #if (DEEP_SLEEP == 1)
 		dwt_configuresleep(sleep_mode, DWT_WAKE_WK | DWT_WAKE_CS | DWT_SLP_EN); // configure the on wake parameters (upload the IC config settings)
 #endif
@@ -431,15 +431,15 @@ int tag_app_run(instance_data_t *inst)
 		inst->msg_f.destAddr[0] = 0xff; // POLL数据协议中的目标地址，POLL消息是广播，则为0xFFFF
 		inst->msg_f.destAddr[1] = 0xff;
 		dwt_writetxdata(inst->psduLength, (uint8_t *)&inst->msg_f, 0); // 将数据帧写入相应寄存器
-		dwt_setrxaftertxdelay((uint32_t)inst->tagRespRxDelay_sy);		 // 设置发送后延时tagRespRxDelay_sy打开接收机进行A0的resp消息接收
-		inst->remainingRespToRx = MAX_ANCHOR_LIST_SIZE;				 // 期望收到4个RESP消息
-		dwt_setrxtimeout((uint16_t)inst->fwto4RespFrame_sy);			 // 设置接收超时时间
-		dwt_setpreambledetecttimeout(PTO_PACS);						 // 设置前导码超时时间
-		inst->rxResponseMask = 0;									 // 复位接收到resp的标志字节
-		inst->wait4ack = DWT_RESPONSE_EXPECTED;						 // 设置发送消息后等待接收，则系统将自动在发射后开启接收机等待接收数据
-		dwt_writetxfctrl(inst->psduLength, 0, 1);					 // 设置发送数据帧控制格式
-		inst->twrMode = INITIATOR;									 // 设置当前板卡TWR模式，POLL发起者为INITIATOR
-		dwt_starttx(DWT_START_TX_IMMEDIATE | DWT_RESPONSE_EXPECTED); // 控制消息发出
+		dwt_setrxaftertxdelay((uint32_t)inst->tagRespRxDelay_sy);	   // 设置发送后延时tagRespRxDelay_sy打开接收机进行A0的resp消息接收
+		inst->remainingRespToRx = MAX_ANCHOR_LIST_SIZE;				   // 期望收到4个RESP消息
+		dwt_setrxtimeout((uint16_t)inst->fwto4RespFrame_sy);		   // 设置接收超时时间
+		dwt_setpreambledetecttimeout(PTO_PACS);						   // 设置前导码超时时间
+		inst->rxResponseMask = 0;									   // 复位接收到resp的标志字节
+		inst->wait4ack = DWT_RESPONSE_EXPECTED;						   // 设置发送消息后等待接收，则系统将自动在发射后开启接收机等待接收数据
+		dwt_writetxfctrl(inst->psduLength, 0, 1);					   // 设置发送数据帧控制格式
+		inst->twrMode = INITIATOR;									   // 设置当前板卡TWR模式，POLL发起者为INITIATOR
+		dwt_starttx(DWT_START_TX_IMMEDIATE | DWT_RESPONSE_EXPECTED);   // 控制消息发出
 
 		inst->AppState = TA_TX_WAIT_CONF;		   // 设置状态标志位为TA_TX_WAIT_CONF
 		inst->previousState = TA_TXPOLL_WAIT_SEND; // 设置上一个状态为TA_TXPOLL_WAIT_SEND
@@ -559,7 +559,7 @@ int tag_app_run(instance_data_t *inst)
 			{
 			case RTLS_DEMO_MSG_ANCH_RESP: // 收到基站发送的resp消息
 			{
-				uint8_t currentRangeNum = (messageData[TOFRN] + 1);					   // 计算RangeNum
+				uint8_t currentRangeNum = (messageData[TOFRN] + 1);						 // 计算RangeNum
 				if (GATEWAY_ANCHOR_ADDR == (srcAddr[0] | ((uint32_t)(srcAddr[1] << 8)))) // 收到A0(主基站)的resp消息
 				{
 					/*
@@ -700,8 +700,8 @@ int tag_run(void)
 		int32_t nextPeriod; // 设置下次测距周期开始时间=休眠时间+校准时间
 		nextPeriod = inst->tagSleepRnd_ms + inst->tagSleepTime_ms + inst->tagSleepCorrection_ms;
 		inst->nextWakeUpTime_ms = (uint32_t)nextPeriod; // 设置唤醒时间
-		inst->tagSleepCorrection_ms = 0;			  // 清除tagSleepCorrection_ms
-		inst->instanceTimerEn = 1;					  // 开始计时器计时
+		inst->tagSleepCorrection_ms = 0;				// 清除tagSleepCorrection_ms
+		inst->instanceTimerEn = 1;						// 开始计时器计时
 	}
 
 	if (inst->instanceTimerEn == 1)

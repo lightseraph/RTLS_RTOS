@@ -1,10 +1,8 @@
 #include "dw_app.h"
-#include "port.h"
-#include "deca_regs.h"
 #include "ssd1306.h"
 #include "cmsis_os.h"
-#include "instance.h"
-#include "kalman.h"
+#include "iwdg.h"
+#include "eeprom.h"
 
 #define TX_ANT_DLY 16385
 #define RX_ANT_DLY 16385
@@ -13,25 +11,118 @@ extern dwt_txconfig_t txconfig_options;
 extern osThreadId_t defaultTaskHandle;
 extern osThreadId_t DW_MainHandle;
 
-static dwt_config_t config = {
-    5,                /* 信道号. Channel number. */
-    DWT_PLEN_512,     /* Preamble length. Used in TX only. */
-    DWT_PAC32,        /* Preamble acquisition chunk size. Used in RX only. */
-    4,                /* Tx前导码. TX preamble code. Used in TX only. */
-    4,                /* Rx前导码. RX preamble code. Used in RX only. */
-    2,                /* 帧分隔符模式. 0 to use standard 8 symbol SFD, 1 to use non-standard 8 symbol, 2 for non-standard 16 symbol SFD and 3 for 4z 8 symbol SDF type */
-    DWT_BR_850K,      /* 数据速率. Data rate. */
-    DWT_PHRMODE_STD,  /* 物理层头模式. PHY header mode. */
-    DWT_PHRRATE_STD,  /* 物理层头速率. PHY header rate. */
-    (513 + 16 - 32),  /* 帧分隔符超时. SFD timeout (preamble length + 1 + SFD length - PAC size). Used in RX only. */
-    DWT_STS_MODE_OFF, /* STS模式. STS disabled */
-    DWT_STS_LEN_64,   /* STS长度. STS length see allowed values in Enum dwt_sts_lengths_e */
-    DWT_PDOA_M0       /* PDOA mode off */
+uint32 inittestapplication(void);
+
+volatile uint8_t s1switch = 0;
+uint16_t instance_anchaddr = 0;
+uint8_t dr_mode = 0;
+uint8_t tagaddr, ancaddr;
+uint8_t instance_mode = ANCHOR;
+uint8_t max_tag_num = 10;
+
+// static dwt_config_t config = {
+//     5,                /* 信道号. Channel number. */
+//     DWT_PLEN_512,     /* Preamble length. Used in TX only. */
+//     DWT_PAC16,        /* Preamble acquisition chunk size. Used in RX only. */
+//     4,                /* Tx前导码. TX preamble code. Used in TX only. */
+//     4,                /* Rx前导码. RX preamble code. Used in RX only. */
+//     0,                /* 帧分隔符模式. 0 to use standard 8 symbol SFD, 1 to use non-standard 8 symbol, 2 for non-standard 16 symbol SFD and 3 for 4z 8 symbol SDF type */
+//     DWT_BR_850K,      /* 数据速率. Data rate. */
+//     DWT_PHRMODE_STD,  /* 物理层头模式. PHY header mode. */
+//     DWT_PHRRATE_STD,  /* 物理层头速率. PHY header rate. */
+//     (513 + 8 - 16),   /* 帧分隔符超时. SFD timeout (preamble length + 1 + SFD length - PAC size). Used in RX only. */
+//     DWT_STS_MODE_OFF, /* STS模式. STS disabled */
+//     DWT_STS_LEN_64,   /* STS长度. STS length see allowed values in Enum dwt_sts_lengths_e */
+//     DWT_PDOA_M0       /* PDOA mode off */
+// };
+
+instanceConfig_t chConfig[2] = {
+    // mode 1 - SW: 2 off 850K ch5
+    {
+        .channelNumber = 5,          // channel
+        .preambleCode = 4,           // preambleCode
+        .pulseRepFreq = DWT_PRF_16M, // prf
+        .dataRate = DWT_BR_850K,     // datarate
+        .preambleLen = DWT_PLEN_512, // preambleLength
+        .pacSize = DWT_PAC16,        // pacSize
+        .nsSFD = 0,                  // non-standard SFD
+        .sfdTO = (513 + 8 - 16)      // SFD timeout		preamble length + 1 + SFD length – PAC size
+    },
+    // mode 2 - SW: 2 on 6.8M ch5
+    {
+        .channelNumber = 5,          // channel
+        .preambleCode = 4,           // preambleCode
+        .pulseRepFreq = DWT_PRF_16M, // prf
+        .dataRate = DWT_BR_6M8,      // datarate
+        .preambleLen = DWT_PLEN_128, // preambleLength
+        .pacSize = DWT_PAC8,         // pacSize
+        .nsSFD = 0,                  // non-standard SFD
+        .sfdTO = (129 + 8 - 8)       // SFD timeout		preamble length + 1 + SFD length – PAC size
+    },
 };
+
+sfConfig_t sfConfig[2] = {
+// mode 1 - SW: 2 off 110K ch2 4tags 112ms
+#define SLOT_TIME_850K 20
+#define SLOT_TIME_6M8 10
+    {
+        .slotDuration_ms = (SLOT_TIME_850K),             // slot duration in milliseconds (NOTE: the ranging exchange must be able to complete in this time
+        .numSlots = (MAX_TAG_850K),                      // number of slots in the superframe (8 tag slots and 2 used for anchor to anchor ranging),
+        .sfPeriod_ms = (MAX_TAG_850K * SLOT_TIME_850K),  // in ms => 280ms frame means 3.57 Hz location rate
+        .tagPeriod_ms = (MAX_TAG_850K * SLOT_TIME_850K), // tag period in ms (sleep time + ranging time)
+        .pollTxToFinalTxDly_us = (8500)                  // poll to final delay in microseconds (needs to be adjusted according to lengths of ranging frames)
+    },
+#if (DISCOVERY == 1)
+    // mode 2 - SW: 2 on
+    {
+        .slotDuration_ms = (10),        // slot duration in milliseconds (NOTE: the ranging exchange must be able to complete in this time
+                                        // e.g. tag sends a poll, 4 anchors send responses and tag sends the final + processing time
+        .numSlots = (100),              // number of slots in the superframe (98 tag slots and 2 used for anchor to anchor ranging),
+        .sfPeriod_ms = (10 * 100),      // in ms => 1000 ms frame means 1 Hz location rate
+        .tagPeriod_ms = (10 * 100),     // tag period in ms (sleep time + ranging time)
+        .pollTxToFinalTxDly_us = (2500) // poll to final delay in microseconds (needs to be adjusted according to lengths of ranging frames)
+
+    }
+#else
+    // mode 2 - SW: 2 on 6.8M ch2 15tags 150ms
+    {
+        .slotDuration_ms = (SLOT_TIME_6M8),            // slot duration in milliseconds (NOTE: the ranging exchange must be able to complete in this time
+        .numSlots = (MAX_TAG_68M),                     // number of slots in the superframe (8 tag slots and 2 used for anchor to anchor ranging),
+        .sfPeriod_ms = (MAX_TAG_68M * SLOT_TIME_6M8),  // in ms => 100 ms frame means 10 Hz location rate
+        .tagPeriod_ms = (MAX_TAG_68M * SLOT_TIME_6M8), // tag period in ms (sleep time + ranging time)
+        .pollTxToFinalTxDly_us = (2500)                // poll to final delay in microseconds (needs to be adjusted according to lengths of ranging frames)
+
+    }
+#endif
+};
+
+void addressconfigure(uint8 mode)
+{
+    uint16 instAddress;
+    instance_anchaddr = rom_getDeviceAddr();
+
+    if (mode == ANCHOR)
+    {
+        instAddress = GATEWAY_ANCHOR_ADDR | instance_anchaddr;
+    }
+    else
+    {
+        instAddress = instance_anchaddr;
+    }
+    instance_set_16bit_address(instAddress);
+}
+
+uint8_t decarangingmode(void)
+{
+    uint8_t mode = 0;
+
+    return mode;
+}
 
 void DW_Init_Task(void *argument)
 {
-    port_set_dw_ic_spi_fastrate();
+    port_DisableEXT_IRQ();
+    // port_set_dw_ic_spi_fastrate();
     reset_DWIC();
     osDelay(2);
 
@@ -40,32 +131,45 @@ void DW_Init_Task(void *argument)
         osDelay(1);
     };
 
-    if (dwt_initialise(DWT_DW_INIT) == DWT_ERROR)
+    /*  if (dwt_initialise(DWT_DW_INIT) == DWT_ERROR)
+     {
+         LCD_DISPLAY(0, 32, "DW INIT Error!");
+     }
+     else
+     {
+         LCD_DISPLAY(0, 32, "DW INIT Success!");
+         osDelay(1000);
+         HAL_IWDG_Refresh(&hiwdg);
+         if (!dwt_configure(&config))
+             LCD_DISPLAY(0, 32, "DW Config Success!");
+
+         dwt_setrxantennadelay(RX_ANT_DLY);
+         dwt_settxantennadelay(TX_ANT_DLY);
+
+         kalman_filter_Init();
+
+         dwt_setleds(DWT_LEDS_ENABLE | DWT_LEDS_INIT_BLINK);
+         dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
+
+         xTaskNotifyGive(defaultTaskHandle); // 初始化成功通知启动看门狗和LED闪烁任务
+         xTaskNotifyGive(DW_MainHandle);     // 通知启动DW主任务
+         osDelay(2000);
+
+         LCD_DISPLAY(0, 32, "                  ");
+         vTaskDelete(NULL);
+     } */
+    if (inittestapplication() != (uint32)-1)
     {
-        LCD_DISPLAY(0, 32, "DW INIT Error!");
-    }
-    else
-    {
-        LCD_DISPLAY(0, 32, "DW INIT Success!");
-        osDelay(1000);
-        if (!dwt_configure(&config))
-            LCD_DISPLAY(0, 32, "DW Config Success!");
-
-        dwt_setrxantennadelay(RX_ANT_DLY);
-        dwt_settxantennadelay(TX_ANT_DLY);
-
-        kalman_filter_Init();
-
-        dwt_setleds(DWT_LEDS_ENABLE | DWT_LEDS_INIT_BLINK);
-        dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
-
-        xTaskNotifyGive(defaultTaskHandle);
-        xTaskNotifyGive(DW_MainHandle);
+        LCD_DISPLAY(0, 32, "DW Config Success!");
+        xTaskNotifyGive(defaultTaskHandle); // 初始化成功通知启动看门狗和LED闪烁任务
+        xTaskNotifyGive(DW_MainHandle);     // 通知启动DW主任务
         osDelay(2000);
-
         LCD_DISPLAY(0, 32, "                  ");
         vTaskDelete(NULL);
     }
+    else
+        LCD_DISPLAY(0, 32, "DW Config Fail!");
+    port_EnableEXT_IRQ();
 }
 
 void DW_Main_Task(void *argument)
@@ -73,6 +177,70 @@ void DW_Main_Task(void *argument)
     ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
     for (;;)
     {
-        osDelay(10);
+        HAL_IWDG_Refresh(&hiwdg);
+        instance_data_t *inst = instance_get_local_structure_ptr();
+        int monitor_local = inst->monitor;
+        int txdiff = (portGetTickCnt() - inst->timeofTx);
+        instance_mode = instance_get_role();
+
+        if (instance_mode == TAG) // 根据角色进入相应的状态机流程
+        {
+            tag_run();
+        }
+        else
+        {
+            anch_run();
+        }
+
+        if ((monitor_local == 1) && (txdiff > inst->slotDuration_ms))
+		{
+			inst->wait4ack = 0;
+			if (instance_mode == TAG)
+			{
+				tag_process_rx_timeout(inst);
+			}
+			else
+			{
+				dwt_forcetrxoff();
+				inst->AppState = TA_RXE_WAIT;
+			}
+			inst->monitor = 0;
+		}
+        osDelay(1);
     }
+}
+
+uint32 inittestapplication(void)
+{
+    uint32 devID;
+    int result;
+
+    instance_mode = rom_getDeviceMode();
+
+    result = instance_init(instance_mode); // 设置工作模式
+    if (0 > result)
+    {
+        return (-1);
+    }
+
+    port_set_dw_ic_spi_fastrate();   // SPI高速模式
+    devID = instance_readdeviceid(); // 读取设备ID
+
+    if (DWT_C0_DEV_ID != devID) // SPI异常，或硬件故障
+    {
+        return (-1);
+    }
+
+    addressconfigure(instance_mode); // 设置设备短地址
+    dr_mode = decarangingmode();     // 读取拨码开关第2位，on=6.8M,15tags,28*4ms   off=110K,4tags,10*15ms
+    instance_config(&chConfig[dr_mode], &sfConfig[dr_mode]);
+    if (dr_mode == 1)
+    {
+        max_tag_num = MAX_TAG_68M;
+    }
+    else
+    {
+        max_tag_num = MAX_TAG_850K;
+    }
+    return devID;
 }

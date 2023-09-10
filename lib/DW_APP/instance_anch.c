@@ -395,7 +395,7 @@ void rx_ok_cb_anch(const dwt_cb_data_t *rxd)
 	dw_event.uTimeStamp = portGetTickCnt();
 	dw_event.rxLength = rxd->datalength;
 
-	if ((rxd->fctrl[0] == 0x41) && ((rxd->fctrl[1] & 0xCC) == 0x88)) // 短地址消息
+	if (true) // 短地址消息
 	{
 		fcode_index = FRAME_CRTL_AND_ADDRESS_S;
 		srcAddr_index = FRAME_CTRLP + ADDR_BYTE_SIZE_S;
@@ -623,11 +623,11 @@ int anch_app_run(instance_data_t *inst)
 			{
 				inst->gatewayAnchor = TRUE;
 			}
-			dwt_enableframefilter(DWT_FF_NOTYPE_EN); // 设置帧过滤模式，允许接收帧数据和ACK数据
-			dwt_setrxaftertxdelay(0);				 // 初始化发送消息后立即打开接收机
-			inst->AppState = TA_RXE_WAIT;			 // 下一个状态机标志位TA_RXE_WAIT
-			dwt_setrxtimeout(0);					 // 初始化接收超时为0
-			instance_config_frameheader_16bit(inst); // 数据帧控制字节0X41 0X88
+			dwt_configureframefilter(DWT_FF_ENABLE_802_15_4, DWT_FF_DATA_EN | DWT_FF_ACK_EN); // 设置帧过滤模式，允许接收帧数据和ACK数据
+			dwt_setrxaftertxdelay(0);														  // 初始化发送消息后立即打开接收机
+			inst->AppState = TA_RXE_WAIT;													  // 下一个状态机标志位TA_RXE_WAIT
+			dwt_setrxtimeout(0);															  // 初始化接收超时为0
+			instance_config_frameheader_16bit(inst);										  // 数据帧控制字节0X41 0X88
 
 			// 设置DISCOVERY模式下的帧控制字节为0X41 0X8C
 			inst->rng_initmsg.frameCtrl[0] = 0x1 | 0x40;
@@ -698,9 +698,9 @@ int anch_app_run(instance_data_t *inst)
 		{
 		case DWT_SIG_RX_OKAY: // 读取接收成功事件消息
 		{
-			event_data_t *dw_event = instance_getevent(); // 读取事件消息
-			uint8_t srcAddr[8] = {0, 0, 0, 0, 0, 0, 0, 0};  // 源地址
-			uint8_t dstAddr[8] = {0, 0, 0, 0, 0, 0, 0, 0};  // 目标地址
+			event_data_t *dw_event = instance_getevent();  // 读取事件消息
+			uint8_t srcAddr[8] = {0, 0, 0, 0, 0, 0, 0, 0}; // 源地址
+			uint8_t dstAddr[8] = {0, 0, 0, 0, 0, 0, 0, 0}; // 目标地址
 			int fcode = 0;
 			uint8_t tof_idx = 0;
 			int tag_index = 0;
