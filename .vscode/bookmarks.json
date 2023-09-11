@@ -1,0 +1,24 @@
+{
+	"files": [
+		{
+			"path": "lib/DW_APP/instance_tag.c",
+			"bookmarks": [
+				{
+					"line": 489,
+					"column": 0,
+					"label": ""
+				}
+			]
+		},
+		{
+			"path": "lib/DW_APP/instance_common.c",
+			"bookmarks": [
+				{
+					"line": 470,
+					"column": 0,
+					"label": ""
+				}
+			]
+		}
+	]
+}

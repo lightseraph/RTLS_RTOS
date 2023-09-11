@@ -163,13 +163,13 @@ void DW_Init_Task(void *argument)
         LCD_DISPLAY(0, 32, "DW Config Success!");
         xTaskNotifyGive(defaultTaskHandle); // 初始化成功通知启动看门狗和LED闪烁任务
         xTaskNotifyGive(DW_MainHandle);     // 通知启动DW主任务
+        port_EnableEXT_IRQ();
         osDelay(2000);
         LCD_DISPLAY(0, 32, "                  ");
         vTaskDelete(NULL);
     }
     else
         LCD_DISPLAY(0, 32, "DW Config Fail!");
-    port_EnableEXT_IRQ();
 }
 
 void DW_Main_Task(void *argument)
@@ -193,19 +193,19 @@ void DW_Main_Task(void *argument)
         }
 
         if ((monitor_local == 1) && (txdiff > inst->slotDuration_ms))
-		{
-			inst->wait4ack = 0;
-			if (instance_mode == TAG)
-			{
-				tag_process_rx_timeout(inst);
-			}
-			else
-			{
-				dwt_forcetrxoff();
-				inst->AppState = TA_RXE_WAIT;
-			}
-			inst->monitor = 0;
-		}
+        {
+            inst->wait4ack = 0;
+            if (instance_mode == TAG)
+            {
+                tag_process_rx_timeout(inst);
+            }
+            else
+            {
+                dwt_forcetrxoff();
+                inst->AppState = TA_RXE_WAIT;
+            }
+            inst->monitor = 0;
+        }
         osDelay(1);
     }
 }

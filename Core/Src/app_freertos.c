@@ -48,7 +48,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#define __DEBUG_INFO
+// #define __DEBUG_INFO
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -119,8 +119,8 @@ const osThreadAttr_t DW_Init_attributes = {
 osThreadId_t DW_MainHandle;
 const osThreadAttr_t DW_Main_attributes = {
   .name = "DW_Main",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 300 * 4
+  .priority = (osPriority_t) osPriorityNormal1,
+  .stack_size = 1000 * 4
 };
 /* Definitions for FLASH_LED_Q */
 osMessageQueueId_t FLASH_LED_QHandle;
@@ -439,7 +439,7 @@ void OLED_Display_Task(void *argument)
   for (uint8_t dead_time = 0;;)
   {
     // 进入设置模式后，无操作大约4秒，自动退出并保存参数
-    if (dead_time > 20)
+    if (dead_time > 18)
     {
       xEventGroupClearBits(KEY_EVENTHandle, EVENTBIT_KEY_MINUS_LONGPRESS | EVENTBIT_KEY_PLUS_LONGPRESS);
       save_UWB_User_Param();

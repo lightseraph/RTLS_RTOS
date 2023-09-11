@@ -3245,7 +3245,6 @@ uint8_t dwt_checkidlerc(void)
 
 void dwt_isr(void)
 {
-
     // Read Fast Status register
     uint8_t fstat = dwt_read8bitoffsetreg(FINT_STAT_ID, 0);
     uint32_t status = dwt_read32bitreg(SYS_STATUS_ID); // Read status register low 32bits

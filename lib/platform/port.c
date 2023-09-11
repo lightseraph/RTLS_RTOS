@@ -12,7 +12,8 @@
  */
 
 #include <port.h>
-// #include <stm32f1xx_hal_conf.h>
+#include "deca_device_api.h"
+#include <stm32g0xx_hal_conf.h>
 // #include <usbd_cdc_if.h>
 
 /****************************************************************************/ /**
@@ -142,7 +143,7 @@ void reset_DWIC(void)
 
     // Enable GPIO used for DW1000 reset as open collector output
     GPIO_InitStruct.Pin = DW_RESET_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(DW_RESET_GPIO_Port, &GPIO_InitStruct);
 
@@ -150,12 +151,12 @@ void reset_DWIC(void)
     HAL_GPIO_WritePin(DW_RESET_GPIO_Port, DW_RESET_Pin, GPIO_PIN_RESET);
 
     usleep(1);
-    GPIO_InitStruct.Pin = DW_RESET_Pin;
+    /* GPIO_InitStruct.Pin = DW_RESET_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    HAL_GPIO_Init(DW_RESET_GPIO_Port, &GPIO_InitStruct);
+    HAL_GPIO_Init(DW_RESET_GPIO_Port, &GPIO_InitStruct); */
     // put the pin back to output open-drain (not active)
-    // setup_DWICRSTnIRQ(0)
+    setup_DWICRSTnIRQ(0);
 
     Sleep(2);
 }
@@ -177,12 +178,12 @@ void setup_DWICRSTnIRQ(int enable)
         GPIO_InitStruct.Pull = GPIO_PULLDOWN;
         HAL_GPIO_Init(DW_RESET_GPIO_Port, &GPIO_InitStruct);
 
-        HAL_NVIC_EnableIRQ(DECAIRQ_EXTI_IRQn); // pin #0 -> EXTI #0
-        HAL_NVIC_SetPriority(DECAIRQ_EXTI_IRQn, 3, 0);
+        HAL_NVIC_EnableIRQ(EXTI0_1_IRQn); // pin #0 -> EXTI #0
+        HAL_NVIC_SetPriority(EXTI0_1_IRQn, 3, 0);
     }
     else
     {
-        HAL_NVIC_DisableIRQ(DECAIRQ_EXTI_IRQn); // pin #0 -> EXTI #0
+        HAL_NVIC_DisableIRQ(EXTI0_1_IRQn); // pin #0 -> EXTI #0
 
         // put the pin back to tri-state ... as
         // output open-drain (not active)
@@ -368,8 +369,9 @@ void port_set_dw_ic_spi_fastrate(void)
  * @param      GPIO_Pin: Specifies the port pin connected to corresponding EXTI line.
  *             i.e. DW_RESET_Pin and DW_IRQn_Pin
  */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin)
 {
+    uint32_t save = taskENTER_CRITICAL_FROM_ISR();
     switch (GPIO_Pin)
     {
         //    case DW_RST_B_Pin :
@@ -385,11 +387,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
     case DW_IRQn_Pin:
     {
-        // while (HAL_GPIO_ReadPin(DECAIRQ_GPIO, DW_IRQn_Pin) == GPIO_PIN_SET)
-        {
-            process_deca_irq();
-            // dwt_isr();
-        }
+        process_deca_irq();
+        // dwt_isr();
 
         break;
     }
@@ -397,6 +396,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     default:
         break;
     }
+    taskEXIT_CRITICAL_FROM_ISR(save);
 }
 
 /* @fn      process_deca_irq
@@ -408,10 +408,11 @@ __INLINE void process_deca_irq(void)
 {
     while (port_CheckEXT_IRQ() != 0)
     {
-        if (port_dwic_isr)
+        /* if (port_dwic_isr)
         {
             port_dwic_isr();
-        }
+        } */
+        dwt_isr();
     } // while DW3000 IRQ line active
 }
 

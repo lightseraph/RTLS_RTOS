@@ -198,7 +198,7 @@ extern "C"
 #define DWT_LEDS_ENABLE 0x01
 #define DWT_LEDS_INIT_BLINK 0x02
 // Default blink time. Blink time is expressed in multiples of 14 ms. The value defined here is ~225 ms.
-#define DWT_LEDS_BLINK_TIME_DEF 0x30
+#define DWT_LEDS_BLINK_TIME_DEF 0x10
 
 #define GPIO_PIN2_RXLED (((uint32_t)0x1) << 6) /* The pin operates as the RXLED output */
 #define GPIO_PIN3_TXLED (((uint32_t)0x1) << 9) /* The pin operates as the TXLED output */

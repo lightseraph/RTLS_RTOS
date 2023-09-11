@@ -10,7 +10,8 @@
         "freertosconfig.h": "c",
         "task.h": "c",
         "config_options.h": "c",
-        "dw_app.h": "c"
+        "dw_app.h": "c",
+        "port.h": "c"
     },
     "C_Cpp.default.compilerPath": "/home/light/.platformio/packages/toolchain-gccarmnoneeabi/bin/arm-none-eabi-gcc"
 }
