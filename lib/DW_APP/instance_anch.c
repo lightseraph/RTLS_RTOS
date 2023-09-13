@@ -652,7 +652,7 @@ int anch_app_run(instance_data_t *inst)
 		{
 			instDone = INST_DONE_WAIT_FOR_NEXT_EVENT;
 			count++;
-			if (count > 50000) // 如长时间未得到中断，为避免死机，重启设备
+			if (count > 20000) // 如长时间未得到中断，为避免死机，重启设备
 			{
 				count = 0;
 				HAL_NVIC_SystemReset(); // 重启

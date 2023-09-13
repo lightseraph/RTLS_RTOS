@@ -4,6 +4,8 @@
 #include "deca_spi.h"
 #include "instance.h"
 #include "eeprom.h"
+#include "usart.h"
+#include "cmsis_os.h"
 
 extern double dwt_getrangebias(uint8_t chan, float range, uint8_t prf);
 
@@ -504,10 +506,8 @@ void tx_conf_cb(const dwt_cb_data_t *txd)
 		memcpy((uint8_t *)&dw_event.msgu.frame[0], (uint8_t *)&inst->msg_f, inst->psduLength);
 
 		instance_putevent(dw_event, DWT_SIG_TX_DONE);
-
 		// inst->txMsgCount++;
 	}
-
 	inst->monitor = 0;
 }
 
@@ -537,7 +537,6 @@ void instance_putevent(event_data_t newevent, uint8_t etype)
 	// set type - this makes it a new event (making sure the event data is copied before event is set as new)
 	// to make sure that the get event function does not get an incomplete event
 	inst->dwevent[inst->dweventIdxIn].type = etype;
-
 	inst->dweventIdxIn++;
 
 	if (MAX_EVENT_NUMBER == inst->dweventIdxIn)

@@ -48,7 +48,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-// #define __DEBUG_INFO
+#define __DEBUG_INFO
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -62,86 +62,73 @@ extern uint8_t UART_RX_DATA[256];
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 64 * 4
-};
+    .name = "defaultTask",
+    .priority = (osPriority_t)osPriorityNormal,
+    .stack_size = 72 * 4};
 /* Definitions for Flash_LED */
 osThreadId_t Flash_LEDHandle;
 const osThreadAttr_t Flash_LED_attributes = {
-  .name = "Flash_LED",
-  .priority = (osPriority_t) osPriorityBelowNormal,
-  .stack_size = 80 * 4
-};
+    .name = "Flash_LED",
+    .priority = (osPriority_t)osPriorityNormal,
+    .stack_size = 80 * 4};
 /* Definitions for Key_Event_Scan */
 osThreadId_t Key_Event_ScanHandle;
 const osThreadAttr_t Key_Event_Scan_attributes = {
-  .name = "Key_Event_Scan",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 128 * 4
-};
+    .name = "Key_Event_Scan",
+    .priority = (osPriority_t)osPriorityNormal,
+    .stack_size = 100 * 4};
 /* Definitions for Key_Process */
 osThreadId_t Key_ProcessHandle;
 const osThreadAttr_t Key_Process_attributes = {
-  .name = "Key_Process",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 80 * 4
-};
+    .name = "Key_Process",
+    .priority = (osPriority_t)osPriorityNormal,
+    .stack_size = 80 * 4};
 /* Definitions for Task_Status */
 osThreadId_t Task_StatusHandle;
 const osThreadAttr_t Task_Status_attributes = {
-  .name = "Task_Status",
-  .priority = (osPriority_t) osPriorityAboveNormal,
-  .stack_size = 256 * 4
-};
+    .name = "Task_Status",
+    .priority = (osPriority_t)osPriorityAboveNormal,
+    .stack_size = 200 * 4};
 /* Definitions for Parse_RX */
 osThreadId_t Parse_RXHandle;
 const osThreadAttr_t Parse_RX_attributes = {
-  .name = "Parse_RX",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 220 * 4
-};
+    .name = "Parse_RX",
+    .priority = (osPriority_t)osPriorityNormal,
+    .stack_size = 220 * 4};
 /* Definitions for OLED_Display */
 osThreadId_t OLED_DisplayHandle;
 const osThreadAttr_t OLED_Display_attributes = {
-  .name = "OLED_Display",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 200 * 4
-};
+    .name = "OLED_Display",
+    .priority = (osPriority_t)osPriorityNormal,
+    .stack_size = 200 * 4};
 /* Definitions for DW_Init */
 osThreadId_t DW_InitHandle;
 const osThreadAttr_t DW_Init_attributes = {
-  .name = "DW_Init",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 128 * 4
-};
+    .name = "DW_Init",
+    .priority = (osPriority_t)osPriorityNormal,
+    .stack_size = 128 * 4};
 /* Definitions for DW_Main */
 osThreadId_t DW_MainHandle;
 const osThreadAttr_t DW_Main_attributes = {
-  .name = "DW_Main",
-  .priority = (osPriority_t) osPriorityNormal1,
-  .stack_size = 1000 * 4
-};
+    .name = "DW_Main",
+    .priority = (osPriority_t)osPriorityBelowNormal,
+    .stack_size = 600 * 4};
 /* Definitions for FLASH_LED_Q */
 osMessageQueueId_t FLASH_LED_QHandle;
 const osMessageQueueAttr_t FLASH_LED_Q_attributes = {
-  .name = "FLASH_LED_Q"
-};
+    .name = "FLASH_LED_Q"};
 /* Definitions for KEY_EVENT_SEMA */
 osSemaphoreId_t KEY_EVENT_SEMAHandle;
 const osSemaphoreAttr_t KEY_EVENT_SEMA_attributes = {
-  .name = "KEY_EVENT_SEMA"
-};
+    .name = "KEY_EVENT_SEMA"};
 /* Definitions for UART_RX_SEMA */
 osSemaphoreId_t UART_RX_SEMAHandle;
 const osSemaphoreAttr_t UART_RX_SEMA_attributes = {
-  .name = "UART_RX_SEMA"
-};
+    .name = "UART_RX_SEMA"};
 /* Definitions for KEY_EVENT */
 osEventFlagsId_t KEY_EVENTHandle;
 const osEventFlagsAttr_t KEY_EVENT_attributes = {
-  .name = "KEY_EVENT"
-};
+    .name = "KEY_EVENT"};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -190,11 +177,12 @@ __weak void PostSleepProcessing(uint32_t ulExpectedIdleTime)
 /* USER CODE END PREPOSTSLEEP */
 
 /**
-  * @brief  FreeRTOS initialization
-  * @param  None
-  * @retval None
-  */
-void MX_FREERTOS_Init(void) {
+ * @brief  FreeRTOS initialization
+ * @param  None
+ * @retval None
+ */
+void MX_FREERTOS_Init(void)
+{
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
@@ -220,7 +208,7 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the queue(s) */
   /* creation of FLASH_LED_Q */
-  FLASH_LED_QHandle = osMessageQueueNew (1, sizeof(LED_Param), &FLASH_LED_Q_attributes);
+  FLASH_LED_QHandle = osMessageQueueNew(1, sizeof(LED_Param), &FLASH_LED_Q_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -265,7 +253,6 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
-
 }
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -517,4 +504,3 @@ void OLED_Display_Task(void *argument)
 /* USER CODE BEGIN Application */
 
 /* USER CODE END Application */
-

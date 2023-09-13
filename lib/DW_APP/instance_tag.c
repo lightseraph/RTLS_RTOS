@@ -422,7 +422,6 @@ int tag_app_run(instance_data_t *inst)
 
 	case TA_TXPOLL_WAIT_SEND: // 将要发送的POLL数据进行打包和发送
 	{
-		__IO int ret = 0;
 		inst->msg_f.messageData[POLL_RNUM] = inst->rangeNum;						  // POLL数据协议中的rangeNum字节赋值
 		inst->msg_f.messageData[FCODE] = RTLS_DEMO_MSG_TAG_POLL;					  // POLL数据协议中的FunctionCode字节赋值
 		inst->psduLength = (TAG_POLL_MSG_LEN + FRAME_CRTL_AND_ADDRESS_S + FRAME_CRC); // 计算POLL消息长度
@@ -431,16 +430,16 @@ int tag_app_run(instance_data_t *inst)
 		inst->msg_f.sourceAddr[1] = (inst->instanceAddress16 >> 8) & 0xff;
 		inst->msg_f.destAddr[0] = 0xff; // POLL数据协议中的目标地址，POLL消息是广播，则为0xFFFF
 		inst->msg_f.destAddr[1] = 0xff;
-		dwt_writetxdata(inst->psduLength, (uint8_t *)&inst->msg_f, 0);	   // 将数据帧写入相应寄存器
-		dwt_setrxaftertxdelay((uint32_t)inst->tagRespRxDelay_sy);		   // 设置发送后延时tagRespRxDelay_sy打开接收机进行A0的resp消息接收
-		inst->remainingRespToRx = MAX_ANCHOR_LIST_SIZE;					   // 期望收到4个RESP消息
-		dwt_setrxtimeout((uint16_t)inst->fwto4RespFrame_sy);			   // 设置接收超时时间
-		dwt_setpreambledetecttimeout(PTO_PACS);							   // 设置前导码超时时间
-		inst->rxResponseMask = 0;										   // 复位接收到resp的标志字节
-		inst->wait4ack = DWT_RESPONSE_EXPECTED;							   // 设置发送消息后等待接收，则系统将自动在发射后开启接收机等待接收数据
-		dwt_writetxfctrl(inst->psduLength, 0, 1);						   // 设置发送数据帧控制格式
-		inst->twrMode = INITIATOR;										   // 设置当前板卡TWR模式，POLL发起者为INITIATOR
-		ret = dwt_starttx(DWT_START_TX_IMMEDIATE | DWT_RESPONSE_EXPECTED); // 控制消息发出
+		dwt_writetxdata(inst->psduLength, (uint8_t *)&inst->msg_f, 0); // 将数据帧写入相应寄存器
+		dwt_setrxaftertxdelay((uint32_t)inst->tagRespRxDelay_sy);	   // 设置发送后延时tagRespRxDelay_sy打开接收机进行A0的resp消息接收
+		inst->remainingRespToRx = MAX_ANCHOR_LIST_SIZE;				   // 期望收到4个RESP消息
+		dwt_setrxtimeout((uint16_t)inst->fwto4RespFrame_sy);		   // 设置接收超时时间
+		dwt_setpreambledetecttimeout(PTO_PACS);						   // 设置前导码超时时间
+		inst->rxResponseMask = 0;									   // 复位接收到resp的标志字节
+		inst->wait4ack = DWT_RESPONSE_EXPECTED;						   // 设置发送消息后等待接收，则系统将自动在发射后开启接收机等待接收数据
+		dwt_writetxfctrl(inst->psduLength, 0, 1);					   // 设置发送数据帧控制格式
+		inst->twrMode = INITIATOR;									   // 设置当前板卡TWR模式，POLL发起者为INITIATOR
+		dwt_starttx(DWT_START_TX_IMMEDIATE | DWT_RESPONSE_EXPECTED);   // 控制消息发出
 
 		inst->AppState = TA_TX_WAIT_CONF;		   // 设置状态标志位为TA_TX_WAIT_CONF
 		inst->previousState = TA_TXPOLL_WAIT_SEND; // 设置上一个状态为TA_TXPOLL_WAIT_SEND
@@ -487,6 +486,7 @@ int tag_app_run(instance_data_t *inst)
 			2、回调函数内处理中断，写入事件标志位
 			3、此处读取事件标志位获取发送成功标志位状态
 		*/
+
 		if (dw_event->type != DWT_SIG_TX_DONE) // 读取发送完成事件消息
 		{
 			instDone = INST_DONE_WAIT_FOR_NEXT_EVENT; // 未发送完成则退出，直到发送完成后向下执行，在中断程序内改变该标志位
