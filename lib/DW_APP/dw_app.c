@@ -135,33 +135,6 @@ void DW_Init_Task(void *argument)
         osDelay(1);
     };
 
-    /*  if (dwt_initialise(DWT_DW_INIT) == DWT_ERROR)
-     {
-         LCD_DISPLAY(0, 32, "DW INIT Error!");
-     }
-     else
-     {
-         LCD_DISPLAY(0, 32, "DW INIT Success!");
-         osDelay(1000);
-         HAL_IWDG_Refresh(&hiwdg);
-         if (!dwt_configure(&config))
-             LCD_DISPLAY(0, 32, "DW Config Success!");
-
-         dwt_setrxantennadelay(RX_ANT_DLY);
-         dwt_settxantennadelay(TX_ANT_DLY);
-
-         kalman_filter_Init();
-
-         dwt_setleds(DWT_LEDS_ENABLE | DWT_LEDS_INIT_BLINK);
-         dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE);
-
-         xTaskNotifyGive(defaultTaskHandle); // 初始化成功通知启动看门狗和LED闪烁任务
-         xTaskNotifyGive(DW_MainHandle);     // 通知启动DW主任务
-         osDelay(2000);
-
-         LCD_DISPLAY(0, 32, "                  ");
-         vTaskDelete(NULL);
-     } */
     if (inittestapplication() != (uint32)-1)
     {
         LCD_DISPLAY(0, 32, "DW Config Success!");

@@ -52,7 +52,7 @@ const tx_struct txSpectrumConfig[8] =
             }},
         // Channel 5
         {
-            0xc0, // PG_DELAY
+            0x34, // PG_DELAY
             {
                 0x0E082848, // 16M prf power
                 0x25456585  // 64M prf power

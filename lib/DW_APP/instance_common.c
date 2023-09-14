@@ -262,7 +262,7 @@ int instance_init(int inst_mode)
 	inst->rxResps = 0;
 
 	dwt_setlnapamode(DWT_LNA_ENABLE | DWT_PA_ENABLE); // enable TX, RX state on GPIOs 6 and 5
-
+	dwt_setfinegraintxseq(0);
 	inst->delayedTRXTime32h = 0;
 
 	return 0;
@@ -290,6 +290,7 @@ void instance_config(instanceConfig_t *config, sfConfig_t *sfConfig)
 	inst->configData.rxPAC = config->pacSize;
 	inst->configData.sfdType = config->nsSFD;
 	inst->configData.phrMode = DWT_PHRMODE_STD;
+	inst->configData.phrRate = DWT_PHRRATE_STD;
 	inst->configData.sfdTO = config->sfdTO;
 	inst->configData.stsMode = DWT_STS_MODE_OFF;
 	inst->configData.stsLength = DWT_STS_LEN_64;
@@ -314,7 +315,7 @@ void instance_config(instanceConfig_t *config, sfConfig_t *sfConfig)
 		inst->configTX.power = 0xB8B8B8B8; // 15DB_TXPOWER_SUN
 #endif
 	} */
-
+	inst->configTX.power = 0xFDFDFDFD;
 	inst->configTX.PGdly = txSpectrumConfig[config->channelNumber].pgDelay;
 	dwt_configuretxrf(&inst->configTX);
 #if (OLED == 1) // ULM1

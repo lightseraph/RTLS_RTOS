@@ -371,7 +371,6 @@ void port_set_dw_ic_spi_fastrate(void)
  */
 void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin)
 {
-    uint32_t save = taskENTER_CRITICAL_FROM_ISR();
     switch (GPIO_Pin)
     {
         //    case DW_RST_B_Pin :
@@ -396,7 +395,6 @@ void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin)
     default:
         break;
     }
-    taskEXIT_CRITICAL_FROM_ISR(save);
 }
 
 /* @fn      process_deca_irq

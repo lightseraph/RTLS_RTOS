@@ -19,6 +19,7 @@
 #include "deca_device_api.h"
 #include "deca_version.h"
 #include "port.h"
+#include "stdio.h"
 //  -------------------------------------------------------------------------------------------------------------------
 //  Module Macro definitions and enumerations
 //
@@ -3659,6 +3660,7 @@ int dwt_starttx(uint8_t mode)
         else
         {
             dwt_writefastCMD(CMD_TXRXOFF);
+            printf("tx failed!\r\n");
             retval = DWT_ERROR; // Failed !
 
             // optionally could return error, and still send the frame at indicated time

@@ -184,14 +184,16 @@ uint8_t anch_txresponse_or_rx_reenable(void)
 		sendResp = 1;
 	}
 
-	inst->delayedTRXTime32h += inst->fixedReplyDelayAnc32h;
+	inst->delayedTRXTime32h += inst->fixedReplyDelayAnc32h + 20000;
 
 	if (sendResp == 1)
 	{
 		inst->wait4ack = DWT_RESPONSE_EXPECTED; // re has/will be re-enabled
 
 		dwt_setdelayedtrxtime(inst->delayedTRXTime32h);
-		if (dwt_starttx(DWT_START_TX_DELAYED | DWT_RESPONSE_EXPECTED))
+		int ret = dwt_starttx(DWT_START_TX_DELAYED | DWT_RESPONSE_EXPECTED);
+
+		if (ret)
 		{
 			// if TX has failed - we need to re-enable RX for the next response or final reception...
 			dwt_setrxaftertxdelay(0);
@@ -209,6 +211,7 @@ uint8_t anch_txresponse_or_rx_reenable(void)
 		}
 		else
 		{
+			printf("tx success. delayed:%lu\r\n", inst->delayedTRXTime32h);
 			inst->delayedTRXTime32h += inst->fixedReplyDelayAnc32h; // to take into account W4R
 			typePend = DWT_SIG_TX_PENDING;							// exit this interrupt and notify the application/instance that TX is in progress.
 			inst->timeofTx = portGetTickCnt();
@@ -392,6 +395,8 @@ void rx_ok_cb_anch(const dwt_cb_data_t *rxd)
 	uint8_t srcAddr_index = 0;
 	event_data_t dw_event;
 
+	uint32_t save = taskENTER_CRITICAL_FROM_ISR();
+
 	dw_event.uTimeStamp = portGetTickCnt();
 	dw_event.rxLength = rxd->datalength;
 
@@ -416,6 +421,7 @@ void rx_ok_cb_anch(const dwt_cb_data_t *rxd)
 	dwt_readrxtimestamp(rxTimeStamp);
 	dwt_readrxdata((uint8_t *)&dw_event.msgu.frame[0], rxd->datalength, 0); // Read Data Frame
 	instance_seteventtime(&dw_event, rxTimeStamp);
+	// dwt_readrxtimestamphi32();
 	dw_event.type = 0;
 	dw_event.typePend = DWT_SIG_DW_IDLE;
 #if (DISCOVERY == 1) // DISCOVERY模式
@@ -528,6 +534,7 @@ void rx_ok_cb_anch(const dwt_cb_data_t *rxd)
 	{
 		anch_handle_error_unknownframe_timeout(dw_event);
 	}
+	taskEXIT_CRITICAL_FROM_ISR(save);
 }
 
 /*

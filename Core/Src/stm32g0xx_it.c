@@ -113,12 +113,12 @@ void HardFault_Handler(void)
 void EXTI2_3_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI2_3_IRQn 0 */
-
+  uint32_t save = taskENTER_CRITICAL_FROM_ISR();
   /* USER CODE END EXTI2_3_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(DW_IRQn_Pin);
   HAL_GPIO_EXTI_IRQHandler(KEY_Plus_Pin);
   /* USER CODE BEGIN EXTI2_3_IRQn 1 */
-  uint32_t save = taskENTER_CRITICAL_FROM_ISR();
+
   if ((GPIOB->IDR & KEY_Plus_Pin) == 0)
   {
     key[0].flag.key_state = KEY_STATE_PRESS; // 按下
@@ -141,11 +141,11 @@ void EXTI2_3_IRQHandler(void)
 void EXTI4_15_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI4_15_IRQn 0 */
-
+  uint32_t save = taskENTER_CRITICAL_FROM_ISR();
   /* USER CODE END EXTI4_15_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(KEY_Minus_Pin);
   /* USER CODE BEGIN EXTI4_15_IRQn 1 */
-  uint32_t save = taskENTER_CRITICAL_FROM_ISR();
+
   if ((GPIOB->IDR & KEY_Minus_PIN) == 0)
   {
     key[1].flag.key_state = KEY_STATE_PRESS; // 按下
