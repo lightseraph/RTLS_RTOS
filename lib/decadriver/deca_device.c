@@ -3660,7 +3660,6 @@ int dwt_starttx(uint8_t mode)
         else
         {
             dwt_writefastCMD(CMD_TXRXOFF);
-            printf("tx failed!\r\n");
             retval = DWT_ERROR; // Failed !
 
             // optionally could return error, and still send the frame at indicated time

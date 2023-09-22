@@ -59,7 +59,7 @@ void MX_USART1_UART_Init(void)
   huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart1.Init.OverSampling = UART_OVERSAMPLING_16;
   huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+  huart1.Init.ClockPrescaler = UART_PRESCALER_DIV4;
   huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
   if (HAL_UART_Init(&huart1) != HAL_OK)
   {
@@ -251,7 +251,7 @@ void Parse_RX(void)
   {
     if (strcmp(cmd[1], "mode") == 0) // 设置设备类型，基站还是标签
     {
-      printf("set device mode\r\n");
+      // printf("set device mode\r\n");
       if (strcmp(cmd[2], "A") == 0)
       {
         printf("set device as Anchor\r\n");

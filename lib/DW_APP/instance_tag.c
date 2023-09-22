@@ -382,6 +382,7 @@ int tag_app_run(instance_data_t *inst)
 					inst->rxResponseMaskReport = inst->rxResponseMask;
 					inst->rxResponseMask = 0;
 					inst->newRangeTime = portGetTickCnt();
+					// printf("range: %d\r\n", inst->newRange);
 				}
 			}
 		}
@@ -469,6 +470,7 @@ int tag_app_run(instance_data_t *inst)
 		else // 发送成功
 		{
 			inst->AppState = TA_TX_WAIT_CONF; // 等待发送过程中，进入TA_TX_WAIT_CONF，发送成功后也将开启新的测距周期
+			printf("final sent\r\n");
 		}
 
 		inst->previousState = TA_TXFINAL_WAIT_SEND;
@@ -568,6 +570,7 @@ int tag_app_run(instance_data_t *inst)
 						tagSleepRnd_ms是未收到A0校准信息的默认测距周期，如收到A0消息后，将tagSleepRnd_ms清零不再使用
 					*/
 					inst->tagSleepCorrection_ms = (int16_t)(((uint16_t)messageData[RES_TAG_SLP1] << 8) + messageData[RES_TAG_SLP0]);
+					printf("sleep correction: %ld\r\n", inst->tagSleepCorrection_ms);
 					inst->tagSleepRnd_ms = 0;
 				}
 
@@ -698,7 +701,8 @@ int tag_run(void)
 
 	if (done == INST_DONE_WAIT_FOR_NEXT_EVENT_TO) // 标签完成一次测距周期，进入休眠
 	{
-		int32_t nextPeriod; // 设置下次测距周期开始时间=休眠时间+校准时间
+		int32_t nextPeriod = 0; // 设置下次测距周期开始时间=休眠时间+校准时间
+		// printf("next: %lu, correct: %ld, %ld, %ld\r\n", (uint32_t)nextPeriod, inst->tagSleepCorrection_ms, inst->tagSleepRnd_ms, inst->tagSleepTime_ms);
 		nextPeriod = inst->tagSleepRnd_ms + inst->tagSleepTime_ms + inst->tagSleepCorrection_ms;
 		inst->nextWakeUpTime_ms = (uint32_t)nextPeriod; // 设置唤醒时间
 		inst->tagSleepCorrection_ms = 0;				// 清除tagSleepCorrection_ms
@@ -713,8 +717,12 @@ int tag_run(void)
 			inst->instanceTimerEn = 0;
 			dw_event.rxLength = 0;
 			dw_event.type = 0;
+			// inst->nextWakeUpTime_ms = 0;
 			instance_putevent(dw_event, DWT_SIG_RX_TIMEOUT); // 设置事件，标记测距周期时间到，准备进入新测距周期
+															 // printf("sleep done\r\n");
 		}
+		/* else
+			printf("sleep: %lu, %lu\r\n", portGetTickCnt() - inst->instanceWakeTime_ms, inst->nextWakeUpTime_ms); */
 	}
 	return 0;
 }

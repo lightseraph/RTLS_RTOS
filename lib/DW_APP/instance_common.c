@@ -507,7 +507,7 @@ void tx_conf_cb(const dwt_cb_data_t *txd)
 		memcpy((uint8_t *)&dw_event.msgu.frame[0], (uint8_t *)&inst->msg_f, inst->psduLength);
 
 		instance_putevent(dw_event, DWT_SIG_TX_DONE);
-		// inst->txMsgCount++;
+		//  inst->txMsgCount++;
 	}
 	inst->monitor = 0;
 }

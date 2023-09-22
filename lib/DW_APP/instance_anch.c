@@ -184,14 +184,14 @@ uint8_t anch_txresponse_or_rx_reenable(void)
 		sendResp = 1;
 	}
 
-	inst->delayedTRXTime32h += inst->fixedReplyDelayAnc32h + 20000;
+	// inst->delayedTRXTime32h += inst->fixedReplyDelayAnc32h + 20000;
 
 	if (sendResp == 1)
 	{
 		inst->wait4ack = DWT_RESPONSE_EXPECTED; // re has/will be re-enabled
 
-		dwt_setdelayedtrxtime(inst->delayedTRXTime32h);
-		int ret = dwt_starttx(DWT_START_TX_DELAYED | DWT_RESPONSE_EXPECTED);
+		dwt_setdelayedtrxtime(inst->fixedReplyDelayAnc32h);
+		int ret = dwt_starttx(DWT_START_TX_DLY_RS | DWT_RESPONSE_EXPECTED);
 
 		if (ret)
 		{
@@ -211,7 +211,7 @@ uint8_t anch_txresponse_or_rx_reenable(void)
 		}
 		else
 		{
-			printf("tx success. delayed:%lu\r\n", inst->delayedTRXTime32h);
+			// printf("tx success. delayed:%lu\r\n", inst->delayedTRXTime32h);
 			inst->delayedTRXTime32h += inst->fixedReplyDelayAnc32h; // to take into account W4R
 			typePend = DWT_SIG_TX_PENDING;							// exit this interrupt and notify the application/instance that TX is in progress.
 			inst->timeofTx = portGetTickCnt();
@@ -293,6 +293,7 @@ void anch_prepare_anc2tag_response(unsigned int tof_idx, uint8_t srcAddr_index, 
 		{
 			tagSleepCorrection_ms = error;
 		}
+		printf("correction: %d\r\n", tagSleepCorrection_ms);
 		inst->msg_f.messageData[RES_TAG_SLP0] = tagSleepCorrection_ms & 0xFF;
 		inst->msg_f.messageData[RES_TAG_SLP1] = (tagSleepCorrection_ms >> 8) & 0xFF;
 	}

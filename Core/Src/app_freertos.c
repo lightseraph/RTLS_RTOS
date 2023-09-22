@@ -99,7 +99,7 @@ osThreadId_t Parse_RXHandle;
 const osThreadAttr_t Parse_RX_attributes = {
   .name = "Parse_RX",
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 220 * 4
+  .stack_size = 250 * 4
 };
 /* Definitions for OLED_Display */
 osThreadId_t OLED_DisplayHandle;
@@ -412,8 +412,8 @@ void Parse_RX_Task(void *argument)
       flashParam.interval = 15;
       xQueueSend(FLASH_LED_QHandle, (void *)&flashParam, pdMS_TO_TICKS(500));
 
-      printf("Received from uart: %s\r\n", UART_RX_DATA);
-      // printf("RX Length: %d\r\n", rx_len);
+      // printf("Received from uart: %s\r\n", UART_RX_DATA);
+      //  printf("RX Length: %d\r\n", rx_len);
       taskENTER_CRITICAL();
       Parse_RX();
       memset(UART_RX_DATA, 0, 256);
