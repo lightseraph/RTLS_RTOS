@@ -204,7 +204,7 @@ int _write(int file, char *data, int len)
   //  arbitrary timeout 1000
 
   HAL_StatusTypeDef status =
-      HAL_UART_Transmit(&huart1, (uint8_t *)data, len, 1000);
+      HAL_UART_Transmit(&huart1, (uint8_t *)data, len, 10000);
 
   // return # of bytes written - as best we can tell
 
@@ -212,6 +212,10 @@ int _write(int file, char *data, int len)
     ; */
   // memset(UART_Transmit_Buff, 0, 50);
   return (status == HAL_OK ? len : 0);
+}
+
+void debug_printf(uint8_t *buff, uint8_t len)
+{
 }
 /* USER CODE END 4 */
 

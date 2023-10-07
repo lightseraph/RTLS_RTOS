@@ -15,7 +15,9 @@
 #include "deca_spi.h"
 #include "deca_regs.h"
 #include "instance.h"
+#include "ssd1306.h"
 
+extern osMessageQueueId_t SerialOut_QHandle;
 // ----------------------------------------------------------------------------------------------
 // 函数声明
 // ----------------------------------------------------------------------------------------------
@@ -293,7 +295,11 @@ void anch_prepare_anc2tag_response(unsigned int tof_idx, uint8_t srcAddr_index, 
 		{
 			tagSleepCorrection_ms = error;
 		}
-		printf("correction: %d\r\n", tagSleepCorrection_ms);
+		// printf("correction: %d\r\n", tagSleepCorrection_ms);
+		/* char buff[20] = {0};
+		sprintf(buff, "correction: %d\r\n", tagSleepCorrection_ms);
+		xQueueSendFromISR(SerialOut_QHandle, buff, NULL); */
+		// LCD_DISPLAY(0, 32, buff);
 		inst->msg_f.messageData[RES_TAG_SLP0] = tagSleepCorrection_ms & 0xFF;
 		inst->msg_f.messageData[RES_TAG_SLP1] = (tagSleepCorrection_ms >> 8) & 0xFF;
 	}

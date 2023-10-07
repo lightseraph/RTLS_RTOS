@@ -10,7 +10,7 @@
 #include "deca_spi.h"
 #include "deca_regs.h"
 #include "instance.h"
-
+#include "ssd1306.h"
 /*
  * 函数名称：void tag_enable_rx(uint32_t dlyTime)
  * 主要功能：
@@ -470,7 +470,7 @@ int tag_app_run(instance_data_t *inst)
 		else // 发送成功
 		{
 			inst->AppState = TA_TX_WAIT_CONF; // 等待发送过程中，进入TA_TX_WAIT_CONF，发送成功后也将开启新的测距周期
-			printf("final sent\r\n");
+											  // printf("final sent\r\n");
 		}
 
 		inst->previousState = TA_TXFINAL_WAIT_SEND;
@@ -570,7 +570,10 @@ int tag_app_run(instance_data_t *inst)
 						tagSleepRnd_ms是未收到A0校准信息的默认测距周期，如收到A0消息后，将tagSleepRnd_ms清零不再使用
 					*/
 					inst->tagSleepCorrection_ms = (int16_t)(((uint16_t)messageData[RES_TAG_SLP1] << 8) + messageData[RES_TAG_SLP0]);
-					printf("sleep correction: %ld\r\n", inst->tagSleepCorrection_ms);
+					// printf("sleep correction: %ld\r\n", inst->tagSleepCorrection_ms);
+					char buff[20];
+					sprintf(buff, "correction: %ld\r\n", inst->tagSleepCorrection_ms);
+					LCD_DISPLAY(0, 32, buff);
 					inst->tagSleepRnd_ms = 0;
 				}
 

@@ -67,14 +67,14 @@ instanceConfig_t chConfig[2] = {
 
 sfConfig_t sfConfig[2] = {
 // mode 1 - SW: 2 off 110K ch2 4tags 112ms
-#define SLOT_TIME_850K 20
+#define SLOT_TIME_850K 80
 #define SLOT_TIME_6M8 10
     {
         .slotDuration_ms = (SLOT_TIME_850K),             // slot duration in milliseconds (NOTE: the ranging exchange must be able to complete in this time
         .numSlots = (MAX_TAG_850K),                      // number of slots in the superframe (8 tag slots and 2 used for anchor to anchor ranging),
         .sfPeriod_ms = (MAX_TAG_850K * SLOT_TIME_850K),  // in ms => 280ms frame means 3.57 Hz location rate
         .tagPeriod_ms = (MAX_TAG_850K * SLOT_TIME_850K), // tag period in ms (sleep time + ranging time)
-        .pollTxToFinalTxDly_us = (13500)                 // poll to final delay in microseconds (needs to be adjusted according to lengths of ranging frames)
+        .pollTxToFinalTxDly_us = (60000)                 // 13500 poll to final delay in microseconds (needs to be adjusted according to lengths of ranging frames)
     },
 #if (DISCOVERY == 1)
     // mode 2 - SW: 2 on

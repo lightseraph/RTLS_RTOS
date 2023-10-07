@@ -62,86 +62,83 @@ extern uint8_t UART_RX_DATA[256];
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 72 * 4
-};
+    .name = "defaultTask",
+    .priority = (osPriority_t)osPriorityNormal,
+    .stack_size = 72 * 4};
 /* Definitions for Flash_LED */
 osThreadId_t Flash_LEDHandle;
 const osThreadAttr_t Flash_LED_attributes = {
-  .name = "Flash_LED",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 80 * 4
-};
+    .name = "Flash_LED",
+    .priority = (osPriority_t)osPriorityNormal,
+    .stack_size = 80 * 4};
 /* Definitions for Key_Event_Scan */
 osThreadId_t Key_Event_ScanHandle;
 const osThreadAttr_t Key_Event_Scan_attributes = {
-  .name = "Key_Event_Scan",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 100 * 4
-};
+    .name = "Key_Event_Scan",
+    .priority = (osPriority_t)osPriorityNormal,
+    .stack_size = 100 * 4};
 /* Definitions for Key_Process */
 osThreadId_t Key_ProcessHandle;
 const osThreadAttr_t Key_Process_attributes = {
-  .name = "Key_Process",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 80 * 4
-};
+    .name = "Key_Process",
+    .priority = (osPriority_t)osPriorityNormal,
+    .stack_size = 80 * 4};
 /* Definitions for Task_Status */
 osThreadId_t Task_StatusHandle;
 const osThreadAttr_t Task_Status_attributes = {
-  .name = "Task_Status",
-  .priority = (osPriority_t) osPriorityAboveNormal,
-  .stack_size = 200 * 4
-};
+    .name = "Task_Status",
+    .priority = (osPriority_t)osPriorityAboveNormal,
+    .stack_size = 200 * 4};
 /* Definitions for Parse_RX */
 osThreadId_t Parse_RXHandle;
 const osThreadAttr_t Parse_RX_attributes = {
-  .name = "Parse_RX",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 250 * 4
-};
+    .name = "Parse_RX",
+    .priority = (osPriority_t)osPriorityNormal,
+    .stack_size = 250 * 4};
 /* Definitions for OLED_Display */
 osThreadId_t OLED_DisplayHandle;
 const osThreadAttr_t OLED_Display_attributes = {
-  .name = "OLED_Display",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 200 * 4
-};
+    .name = "OLED_Display",
+    .priority = (osPriority_t)osPriorityNormal,
+    .stack_size = 200 * 4};
 /* Definitions for DW_Init */
 osThreadId_t DW_InitHandle;
 const osThreadAttr_t DW_Init_attributes = {
-  .name = "DW_Init",
-  .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 128 * 4
-};
+    .name = "DW_Init",
+    .priority = (osPriority_t)osPriorityNormal,
+    .stack_size = 128 * 4};
 /* Definitions for DW_Main */
 osThreadId_t DW_MainHandle;
 const osThreadAttr_t DW_Main_attributes = {
-  .name = "DW_Main",
-  .priority = (osPriority_t) osPriorityBelowNormal,
-  .stack_size = 600 * 4
-};
+    .name = "DW_Main",
+    .priority = (osPriority_t)osPriorityBelowNormal,
+    .stack_size = 600 * 4};
+/* Definitions for SerialOut */
+osThreadId_t SerialOutHandle;
+const osThreadAttr_t SerialOut_attributes = {
+    .name = "SerialOut",
+    .priority = (osPriority_t)osPriorityBelowNormal,
+    .stack_size = 200 * 4};
 /* Definitions for FLASH_LED_Q */
 osMessageQueueId_t FLASH_LED_QHandle;
 const osMessageQueueAttr_t FLASH_LED_Q_attributes = {
-  .name = "FLASH_LED_Q"
-};
+    .name = "FLASH_LED_Q"};
+/* Definitions for SerialOut_Q */
+osMessageQueueId_t SerialOut_QHandle;
+const osMessageQueueAttr_t SerialOut_Q_attributes = {
+    .name = "SerialOut_Q"};
 /* Definitions for KEY_EVENT_SEMA */
 osSemaphoreId_t KEY_EVENT_SEMAHandle;
 const osSemaphoreAttr_t KEY_EVENT_SEMA_attributes = {
-  .name = "KEY_EVENT_SEMA"
-};
+    .name = "KEY_EVENT_SEMA"};
 /* Definitions for UART_RX_SEMA */
 osSemaphoreId_t UART_RX_SEMAHandle;
 const osSemaphoreAttr_t UART_RX_SEMA_attributes = {
-  .name = "UART_RX_SEMA"
-};
+    .name = "UART_RX_SEMA"};
 /* Definitions for KEY_EVENT */
 osEventFlagsId_t KEY_EVENTHandle;
 const osEventFlagsAttr_t KEY_EVENT_attributes = {
-  .name = "KEY_EVENT"
-};
+    .name = "KEY_EVENT"};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -157,6 +154,7 @@ void Parse_RX_Task(void *argument);
 void OLED_Display_Task(void *argument);
 extern void DW_Init_Task(void *argument);
 extern void DW_Main_Task(void *argument);
+void SerialOut_Task(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -190,11 +188,12 @@ __weak void PostSleepProcessing(uint32_t ulExpectedIdleTime)
 /* USER CODE END PREPOSTSLEEP */
 
 /**
-  * @brief  FreeRTOS initialization
-  * @param  None
-  * @retval None
-  */
-void MX_FREERTOS_Init(void) {
+ * @brief  FreeRTOS initialization
+ * @param  None
+ * @retval None
+ */
+void MX_FREERTOS_Init(void)
+{
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
@@ -220,7 +219,10 @@ void MX_FREERTOS_Init(void) {
 
   /* Create the queue(s) */
   /* creation of FLASH_LED_Q */
-  FLASH_LED_QHandle = osMessageQueueNew (1, sizeof(LED_Param), &FLASH_LED_Q_attributes);
+  FLASH_LED_QHandle = osMessageQueueNew(1, sizeof(LED_Param), &FLASH_LED_Q_attributes);
+
+  /* creation of SerialOut_Q */
+  SerialOut_QHandle = osMessageQueueNew(5, 20 * sizeof(uint8_t), &SerialOut_Q_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -254,6 +256,9 @@ void MX_FREERTOS_Init(void) {
   /* creation of DW_Main */
   DW_MainHandle = osThreadNew(DW_Main_Task, NULL, &DW_Main_attributes);
 
+  /* creation of SerialOut */
+  SerialOutHandle = osThreadNew(SerialOut_Task, NULL, &SerialOut_attributes);
+
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
@@ -265,7 +270,6 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
   /* USER CODE END RTOS_EVENTS */
-
 }
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -438,8 +442,8 @@ void OLED_Display_Task(void *argument)
   LED_Param flashParam;
   for (uint8_t dead_time = 0;;)
   {
-    // 进入设置模式后，无操作大约4秒，自动退出并保存参数
-    if (dead_time > 18)
+    // 进入设置模式后，无操作大约3秒，自动退出并保存参数
+    if (dead_time > 15)
     {
       xEventGroupClearBits(KEY_EVENTHandle, EVENTBIT_KEY_MINUS_LONGPRESS | EVENTBIT_KEY_PLUS_LONGPRESS);
       save_UWB_User_Param();
@@ -513,8 +517,28 @@ void OLED_Display_Task(void *argument)
   /* USER CODE END OLED_Display_Task */
 }
 
+/* USER CODE BEGIN Header_SerialOut_Task */
+/**
+ * @brief Function implementing the SerialOut thread.
+ * @param argument: Not used
+ * @retval None
+ */
+/* USER CODE END Header_SerialOut_Task */
+void SerialOut_Task(void *argument)
+{
+  /* USER CODE BEGIN SerialOut_Task */
+  char buff[20];
+  /* Infinite loop */
+  for (;;)
+  {
+    if (pdTRUE == xQueueReceive(SerialOut_QHandle, (void *)&buff[0], portMAX_DELAY))
+      printf(buff);
+    osDelay(1);
+  }
+  /* USER CODE END SerialOut_Task */
+}
+
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
 
 /* USER CODE END Application */
-
